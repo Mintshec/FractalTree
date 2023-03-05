@@ -41,6 +41,9 @@ class FractalTree {
 }
 
 extension FractalTree {
+    // branchLayout 由 branch 和 layout 组成， branch是节点
+    // layout 是树枝的底部（开始点）相对于 (x: geo.size.width / 2, y: geo.size.height - 10) 的位置
+    // 广度优先遍历
     private func layout(root: BranchNode) -> [BranchLayout]{
         
         var layoutList: [BranchLayout] = []
@@ -50,15 +53,20 @@ extension FractalTree {
         
         while queue.isEmpty == false {
             let node = queue.removeFirst()
+            //由于所有的树枝都是从根部开始到顶部结束，所以当前树枝的顶部就是下个子枝的起点
+            //layoutList存放的是对应树枝的起点，layoutDict存放的是对应树枝的顶点
             if count == 0 && node.id == 0 {
+                //树根
                 layoutList.append(BranchLayout(node.node, CGPoint(x: 0, y: 0)))
                 layoutDict.updateValue(node.node.points.top, forKey: node.node)
             } else {
                 let parent = node.parent!.node
                 let parentGlobalTop = layoutDict[parent]!
+                //父树枝顶点是当前树枝的起点
                 let nodeTopX = parentGlobalTop.x + node.node.points.top.x
                 let nodeTopY = parentGlobalTop.y + node.node.points.top.y
                 layoutList.append(BranchLayout(node.node, parentGlobalTop))
+                //将当前树枝的顶点存入字典
                 layoutDict.updateValue(CGPoint(x: nodeTopX, y: nodeTopY), forKey: node.node)
             }
             count += 1
@@ -81,6 +89,7 @@ extension FractalTree {
 }
 
 extension FractalTree {
+    //以黄金分割比生成叶子结点的下一层
     func generateGoldenRatioBranch() {
         if mode == .regular || mode == .complementary {
             let ratio = mode == .regular ? 0.618 : 0.382
@@ -102,9 +111,6 @@ extension FractalTree {
                     leftAngle = node.parent!.node.angle * ratio
                     rightAngle = node.parent!.node.angle * ratio
                 }
-                
-//                let leftAngle = (90 - node.node.angle) * ratio
-//                let rightAngle = -(90 - node.node.angle) * ratio
                 self.childCount += 1
                 node.leftChild = BranchNode(id: self.childCount, upperWidth: upperWidth, bottomWidth: bottomWidth, height: height, angle: leftAngle)
                 self.childCount += 1
